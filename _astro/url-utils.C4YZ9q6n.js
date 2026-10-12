@@ -1,0 +1,1 @@
+import"./zh_TW.BbwopWaz.js";function l(r,e){const n=r.replace(/^\/|\/$/g,"").toLowerCase(),t=e.replace(/^\/|\/$/g,"").toLowerCase();return n===t}function o(...r){return r.join("/").replace(/\/+/g,"/")}function s(r){return a(`/posts/${r}/`)}function a(r){return o("","/caterpillar-reading/",r)}export{s as g,l as p,a as u};
