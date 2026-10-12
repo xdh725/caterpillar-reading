@@ -29,7 +29,11 @@ if [ -n "$(git status --porcelain)" ]; then
   git stash push -u -m "deploy: auto-stash before gh-pages switch"
   NEED_STASH=1
 fi
-git checkout gh-pages
+git checkout gh-pages 2>/dev/null || {
+  echo "gh-pages branch not found, creating orphan branch..."
+  git checkout --orphan gh-pages
+  git rm -rf --cached . > /dev/null 2>&1 || true
+}
 
 # Remove everything except .git (use -not instead of ! for zsh compatibility)
 find . -maxdepth 1 -not -name '.git' -not -name '.' -exec rm -rf {} +
