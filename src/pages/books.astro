@@ -1,0 +1,38 @@
+---
+/**
+ * 书架页 — 列出所有书籍卡片
+ * 数据源：src/data/books/*.json（构建时 import.meta.glob 读取）
+ */
+import BookCard from "@components/misc/BookCard.astro";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import type { BookMeta } from "../types/book";
+
+const books = Object.entries(
+	import.meta.glob("../data/books/*.json", { eager: true }),
+)
+	.map(([path, mod]) => {
+		const meta = mod.default as BookMeta;
+		return { path, meta };
+	})
+	.sort((a, b) => (a.meta.importedAt < b.meta.importedAt ? 1 : -1));
+---
+
+<MainGridLayout title="书架">
+    <div id="book-shelf" class="flex flex-col gap-6">
+        <div class="flex items-center justify-between">
+            <h1 class="text-3xl font-bold text-[var(--primary)] transition">书架</h1>
+            <div class="text-sm text-variant opacity-60">{books.length} 本书</div>
+        </div>
+        <p class="text-variant opacity-70">
+            每本书嚼碎成一系列文章：阅读 → 内化 → 完结摘要 → 隔段时间回顾。点击看进度和全部文章。
+        </p>
+        <div class="grid gap-6 md:grid-cols-1">
+            {books.map(({ meta }) => <BookCard meta={meta} />)}
+        </div>
+        {books.length === 0 && (
+            <div class="text-center text-variant opacity-50 py-16">
+                书架还是空的。本地运行 <code class="bg-black/10 dark:bg-white/10 px-2 py-0.5 rounded">pnpm import-book /path/to/book.epub</code> 导入第一本书。
+            </div>
+        )}
+    </div>
+</MainGridLayout>

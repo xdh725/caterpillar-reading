@@ -1,0 +1,47 @@
+---
+/**
+ * 书籍卡片 — 书架页的单本书条目
+ * 封面缺省时用渐变 + 书名首字占位
+ */
+import type { BookMeta } from "../../types/book";
+import { url } from "../../utils/url-utils";
+
+interface Props {
+	meta: BookMeta;
+}
+
+const { meta } = Astro.props;
+const read = Math.min(meta.nextChapter - 1, meta.totalChapters);
+const progress = meta.totalChapters > 0 ? Math.round((read / meta.totalChapters) * 100) : 0;
+
+const statusBadge =
+	meta.status === "reviewed"
+		? { text: "已回顾", cls: "bg-sky-500/15 text-sky-600 dark:text-sky-400" }
+		: meta.status === "finished"
+			? { text: "已读完", cls: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" }
+			: { text: "阅读中", cls: "bg-amber-500/15 text-amber-600 dark:text-amber-400" };
+---
+
+<a href={url(`/books/${meta.slug}/`)} class="group block rounded-2xl border border-black/5 dark:border-white/10 bg-[var(--card-bg)] p-5 transition hover:border-[var(--primary)] hover:shadow-lg hover:-translate-y-0.5">
+    <div class="flex items-start gap-4">
+        <div class="flex h-16 w-12 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-emerald-400/80 to-sky-500/80 text-2xl font-bold text-white shadow-sm">
+            {meta.title.charAt(0)}
+        </div>
+        <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+                <h2 class="truncate text-lg font-bold text-[var(--primary)] transition group-hover:underline">{meta.title}</h2>
+                <span class={`shrink-0 rounded-full px-2 py-0.5 text-xs ${statusBadge.cls}`}>{statusBadge.text}</span>
+            </div>
+            <div class="mt-0.5 text-sm text-variant opacity-70">{meta.author} · {meta.totalChapters} 章</div>
+            <div class="mt-3">
+                <div class="h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
+                    <div class="h-full rounded-full bg-[var(--primary)] transition-all" style={`width:${progress}%`}></div>
+                </div>
+                <div class="mt-1 flex justify-between text-xs text-variant opacity-60">
+                    <span>{read}/{meta.totalChapters} 章</span>
+                    <span>{meta.articles.length + (meta.finale ? 1 : 0)} 篇{meta.reviews.length > 0 ? ` · ${meta.reviews.length} 次回顾` : ""}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</a>

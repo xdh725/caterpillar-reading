@@ -1,0 +1,78 @@
+---
+/**
+ * 回顾按钮 — 静态站方案：展开显示可复制的本地命令
+ * 本站是静态站点，回顾由本地 AI 脚本（claude --print）执行，完成后自动提交发布。
+ */
+interface Props {
+	slug: string;
+}
+
+const { slug } = Astro.props;
+const command = `cd /Users/xiedonghua/Desktop/AI/github/blogs/caterpillar-reading && pnpm review-book ${slug}`;
+---
+
+<div class="review-button-widget rounded-2xl border border-dashed border-[var(--primary)]/40 bg-[var(--card-bg)] p-5" data-command={command}>
+    <button
+        type="button"
+        class="rb-toggle flex w-full items-center justify-between gap-3 text-left"
+        aria-expanded="false"
+    >
+        <span class="font-medium text-[var(--primary)] transition">🔁 回顾这本书</span>
+        <span class="text-xs text-variant opacity-50">点开看怎么触发</span>
+    </button>
+    <div class="rb-panel mt-4 hidden flex-col gap-3">
+        <p class="text-sm text-variant opacity-70">
+            本站是静态博客，回顾由本地 AI 脚本执行：它会重读这本书的全部笔记文章，生成一篇新的回顾文（可多次），然后自动提交并发布。
+        </p>
+        <div class="flex items-stretch gap-2">
+            <code class="rb-cmd min-w-0 flex-1 overflow-x-auto whitespace-nowrap rounded-lg bg-black/5 dark:bg-white/10 px-3 py-2 text-xs">{command}</code>
+            <button type="button" class="rb-copy shrink-0 rounded-lg bg-[var(--btn-regular-bg)] px-3 py-2 text-xs text-white transition hover:opacity-90">
+                复制
+            </button>
+        </div>
+        <p class="rb-hint text-xs text-variant opacity-0 transition">已复制到剪贴板 ✓</p>
+    </div>
+</div>
+
+<script>
+	function initReviewButtons(root: ParentNode = document) {
+		root.querySelectorAll<HTMLElement>(".review-button-widget").forEach((widget) => {
+			if (widget.dataset.init === "1") return;
+			widget.dataset.init = "1";
+			const toggle = widget.querySelector<HTMLButtonElement>(".rb-toggle");
+			const panel = widget.querySelector<HTMLElement>(".rb-panel");
+			const copy = widget.querySelector<HTMLButtonElement>(".rb-copy");
+			const hint = widget.querySelector<HTMLElement>(".rb-hint");
+			if (!toggle || !panel) return;
+			toggle.addEventListener("click", () => {
+				const open = !panel.classList.contains("hidden");
+				panel.classList.toggle("hidden", open);
+				panel.classList.toggle("flex", !open);
+				toggle.setAttribute("aria-expanded", String(!open));
+			});
+			copy?.addEventListener("click", async () => {
+				const cmd = widget.dataset.command ?? "";
+				try {
+					await navigator.clipboard.writeText(cmd);
+				} catch {
+					// 剪贴板 API 不可用时退化为手动选择
+					const range = document.createRange();
+					const code = widget.querySelector<HTMLElement>(".rb-cmd");
+					if (code) {
+						range.selectNodeContents(code);
+						getSelection()?.removeAllRanges();
+						getSelection()?.addRange(range);
+					}
+				}
+				if (hint) {
+					hint.classList.remove("opacity-0");
+					setTimeout(() => hint.classList.add("opacity-0"), 2000);
+				}
+			});
+		});
+	}
+	// 初次加载 + swup 页面转场后都要初始化
+	document.addEventListener("astro:page-load", () => initReviewButtons());
+	document.addEventListener("swup:page:view", () => initReviewButtons());
+	initReviewButtons();
+</script>
